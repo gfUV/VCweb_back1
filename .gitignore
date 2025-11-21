@@ -1,0 +1,68 @@
+# ─────────────────────────────────────────
+# Node.js
+# ─────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─────────────────────────────────────────
+# TypeScript
+# ─────────────────────────────────────────
+dist/
+build/
+*.tsbuildinfo
+
+# ─────────────────────────────────────────
+# Environment variables
+# ─────────────────────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ─────────────────────────────────────────
+# Firebase / Credentials
+# ─────────────────────────────────────────
+# Evitar subir claves privadas o JSONs de cuenta de servicio
+firebase-adminsdk*.json
+serviceAccount*.json
+
+# Por si alguien guardó la clave privada en archivo
+*.pem
+*.key
+
+# ─────────────────────────────────────────
+# OS-generated files
+# ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─────────────────────────────────────────
+# Logs
+# ─────────────────────────────────────────
+logs/
+*.log
+*.out
+*.pid
+
+# ─────────────────────────────────────────
+# VSCode Config
+# (Opcional, si no quieres subir configuraciones personales)
+# ─────────────────────────────────────────
+.vscode/
+
+# ─────────────────────────────────────────
+# Postman / HTTP client temp files
+# ─────────────────────────────────────────
+*.http
+*.rest
+
+# ─────────────────────────────────────────
+# Others
+# ─────────────────────────────────────────
+coverage/
+temp/
+tmp/
+.cache/
