@@ -3,9 +3,6 @@ import { UserService } from "../services/UserService";
 
 /**
  * Controller for handling User HTTP requests.
- *
- * This class receives incoming requests, validates input,
- * calls the UserService, and sends back HTTP responses.
  */
 export class UserController {
   private userService: UserService;
@@ -23,8 +20,21 @@ export class UserController {
     try {
       const data = req.body;
 
-      if (!data || !data.id) {
+      // Validaciones minimas
+      if (!data?.id) {
         res.status(400).json({ error: "Missing required field: id" });
+        return;
+      }
+      if (!data?.firstName) {
+        res.status(400).json({ error: "Missing required field: firstName" });
+        return;
+      }
+      if (!data?.lastName) {
+        res.status(400).json({ error: "Missing required field: lastName" });
+        return;
+      }
+      if (data?.age !== undefined && typeof data.age !== "number") {
+        res.status(400).json({ error: "Age must be a number" });
         return;
       }
 
@@ -94,6 +104,12 @@ export class UserController {
       }
 
       const updates = req.body;
+
+      // Validación opcional para evitar datos incorrectos
+      if (updates.age !== undefined && typeof updates.age !== "number") {
+        res.status(400).json({ error: "Age must be a number" });
+        return;
+      }
 
       const updatedUser = await this.userService.updateUser(id, updates);
 
