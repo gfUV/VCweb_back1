@@ -18,6 +18,7 @@ export enum AuthProvider {
 export interface IUser {
   id?: string;
   name?: string;
+  age?: number | null;  
   email?: string;
   photoURL?: string | null;
   provider?: AuthProvider;
@@ -34,6 +35,7 @@ export interface IUser {
 export class User {
   public id: string;
   public name: string;
+  public age: number | null;
   public email: string;
   public photoURL: string | null;
   public provider: AuthProvider;
@@ -48,6 +50,7 @@ export class User {
   constructor(data: IUser = {}) {
     this.id = data.id ?? "";
     this.name = data.name ?? "";
+    this.age = data.age ?? null;
     this.email = data.email ?? "";
     this.photoURL = data.photoURL ?? null;
     this.provider = data.provider ?? AuthProvider.MANUAL;
@@ -72,6 +75,7 @@ export class User {
   public toFirestore(): IUser {
     return {
       name: this.name,
+      age: this.age,
       email: this.email,
       photoURL: this.photoURL,
       provider: this.provider,
