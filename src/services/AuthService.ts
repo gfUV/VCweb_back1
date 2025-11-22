@@ -3,11 +3,11 @@ import { UserDAO } from "../dao/UserDAO";
 import { User, AuthProvider } from "../models/User";
 
 /**
- * Service responsible for handling authentication-related
- * business logic using Firebase Authentication and Firestore.
+ * Service responsible for handling authentication-related business logic
+ * using Firebase Authentication and Firestore.
  *
- * This class is used by the AuthController and isolates
- * asynchronous operations and validation rules.
+ * This class is used by the AuthController and isolates asynchronous
+ * operations and validation rules.
  */
 export class AuthService {
   private userDAO: UserDAO;
@@ -30,18 +30,20 @@ export class AuthService {
       throw new Error("ID token is required.");
     }
 
-    // Verify the token via Firebase Admin SDK
+    // Verify token
     const decoded = await firebaseAuth.verifyIdToken(idToken);
     const uid = decoded.uid;
 
-    // Check if user exists in Firestore
+    // Check if user exists
     let user = await this.userDAO.findById(uid);
 
-    // If user does not exist, create it
+    // Create user if it doesn't exist
     if (!user) {
       user = new User({
         id: uid,
-        name: decoded.name ?? "",
+        firstName: decoded.name?.split(" ")[0] ?? "",
+        lastName: decoded.name?.split(" ").slice(1).join(" ") || "",
+        age: null, // Not provided by Google/Facebook
         email: decoded.email ?? "",
         photoURL: decoded.picture ?? null,
         provider: this.mapProvider(decoded.firebase?.sign_in_provider),
