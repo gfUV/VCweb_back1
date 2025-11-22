@@ -12,8 +12,7 @@ export enum AuthProvider {
 /**
  * Firestore User Data Interface.
  *
- * Works with Firebase Admin SDK, where timestamps
- * may be either Firestore Timestamp or JS Date.
+ * Updated: separated firstname/lastname and added age.
  */
 export interface IUser {
   id?: string;
@@ -30,7 +29,7 @@ export interface IUser {
  * User Model class.
  *
  * Normalizes Firestore data and Auth provider data into a consistent
- * application-level model. Designed for MVC + DAO architecture.
+ * application-level model.
  */
 export class User {
   public id: string;
@@ -55,7 +54,6 @@ export class User {
     this.photoURL = data.photoURL ?? null;
     this.provider = data.provider ?? AuthProvider.MANUAL;
 
-    // Normalize Firestore Timestamp → JS Date
     this.createdAt =
       data.createdAt instanceof Date
         ? data.createdAt

@@ -3,10 +3,6 @@ import { User, IUser } from "../models/User";
 
 /**
  * Service layer for User-related business logic.
- *
- * This class acts as an intermediary between the controller and the DAO.
- * It applies validation, enforces rules, and prevents controllers from
- * interacting with the database directly.
  */
 export class UserService {
   private userDAO: UserDAO;
@@ -22,8 +18,16 @@ export class UserService {
    * @returns {Promise<User>} - The created user instance.
    */
   async createUser(data: IUser): Promise<User> {
+
+    // Sanitización mínima para evitar que vengan valores incorrectos
     const user = new User({
-      ...data,
+      id: data.id,
+      firstName: data.firstName ?? "",
+      lastName: data.lastName ?? "",
+      age: data.age ?? null,
+      email: data.email ?? "",
+      photoURL: data.photoURL ?? null,
+      provider: data.provider,
       createdAt: new Date(),
       updatedAt: new Date(),
     });
@@ -34,9 +38,6 @@ export class UserService {
 
   /**
    * Retrieves a user by ID.
-   *
-   * @param {string} id - User document ID.
-   * @returns {Promise<User | null>}
    */
   async getUserById(id: string): Promise<User | null> {
     return await this.userDAO.findById(id);
@@ -44,8 +45,6 @@ export class UserService {
 
   /**
    * Retrieves all users.
-   *
-   * @returns {Promise<User[]>}
    */
   async getAllUsers(): Promise<User[]> {
     return await this.userDAO.findAll();
@@ -53,25 +52,37 @@ export class UserService {
 
   /**
    * Updates an existing user.
-   *
-   * @param {string} id - User ID.
-   * @param {Partial<IUser>} updates - Fields to update.
-   * @returns {Promise<User | null>} - Updated user or null if not found.
    */
   async updateUser(id: string, updates: Partial<IUser>): Promise<User | null> {
     const existing = await this.userDAO.findById(id);
     if (!existing) return null;
 
-    await this.userDAO.update(id, updates);
+    // Limpieza: no permitir actualizar campos inexistentes
+    const allowedFields: (keyof IUser)[] = [
+      "firstName",
+      "lastName",
+      "age",
+      "email",
+      "photoURL",
+      "provider",
+      "updatedAt"
+    ];
 
-    return await this.userDAO.findById(id); // return updated version
+    const safeUpdates: Partial<IUser> = {};
+
+    for (const key of Object.keys(updates)) {
+      if (allowedFields.includes(key as keyof IUser)) {
+        (safeUpdates as any)[key] = (updates as any)[key];
+      }
+    }
+
+    await this.userDAO.update(id, safeUpdates);
+
+    return await this.userDAO.findById(id);
   }
 
   /**
    * Deletes a user by ID.
-   *
-   * @param {string} id - User ID.
-   * @returns {Promise<boolean>} - True if deleted, false if not.
    */
   async deleteUser(id: string): Promise<boolean> {
     const existing = await this.userDAO.findById(id);
