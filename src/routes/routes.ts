@@ -3,12 +3,13 @@
  * @description Central router that groups and exposes all route modules.
  *
  * This file keeps all API routes organized by acting as the single
- * entry point for every resource-specific router (Users, Auth, etc.).
+ * entry point for every resource-specific router (Users, Auth, Meetings, etc.).
  */
 
 import { Router } from "express";
 import UserRoutes from "./UserRoutes";
 import AuthRoutes from "./AuthRoutes";
+import MeetingRoutes from "./MeetingRoutes";
 
 const router = Router();
 
@@ -23,5 +24,11 @@ router.use("/users", UserRoutes);
  * @description Authentication endpoints (Firebase token verification).
  */
 router.use("/auth", AuthRoutes);
+
+/**
+ * @route /api/meetings
+ * @description Meeting management endpoints (create, validate, close meetings).
+ */
+router.use("/api/meetings", MeetingRoutes);
 
 export default router;
