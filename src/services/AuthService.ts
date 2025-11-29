@@ -66,8 +66,8 @@ export class AuthService {
     switch (providerId) {
       case "google.com":
         return AuthProvider.GOOGLE;
-      case "facebook.com":
-        return AuthProvider.FACEBOOK;
+      case "github.com":           
+        return AuthProvider.GITHUB;
       default:
         return AuthProvider.MANUAL;
     }

@@ -5,7 +5,7 @@ import { Timestamp } from "firebase-admin/firestore";
  */
 export enum AuthProvider {
   GOOGLE = "google",
-  FACEBOOK = "facebook",
+  GITHUB = "github",    // 
   MANUAL = "manual",
 }
 
