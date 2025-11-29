@@ -8,7 +8,7 @@ export interface Meeting {
   meetingId: string;       // Short meeting code (e.g., "ABC123")
   hostId: string;          // ID of the user who created the meeting
   createdAt: string;       // ISO timestamp
-  participantCount: number;// Number of participants currently connected
+  participantCount: number;// Historical/statistical count (NOT real-time)
   maxParticipants: number; // Maximum participants allowed (2-10)
   isActive: boolean;       // Whether the meeting is active
   updatedAt: string;       // ISO timestamp of last update
@@ -29,7 +29,6 @@ export interface MeetingResponse {
   canJoin?: boolean;
 }
 
-export interface JoinMeetingDTO {
-  meetingId: string;
-  userId: string;
+export interface UpdateParticipantsDTO {
+  currentParticipants: number; // Real-time count from Backend 2 (WebSocket)
 }

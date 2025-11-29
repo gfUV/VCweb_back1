@@ -4,7 +4,7 @@
  */
 
 import { MeetingDAO } from "../dao/MeetingDAO";
-import { Meeting, CreateMeetingDTO, JoinMeetingDTO } from "../models/Meeting";
+import { Meeting, CreateMeetingDTO } from "../models/Meeting";
 
 export class MeetingService {
   private static readonly MIN_PARTICIPANTS = 2;
@@ -33,7 +33,7 @@ export class MeetingService {
 
   /**
    * Create a new meeting
-   * Host is automatically counted as participant #1
+   * participantCount starts at 0 (historical/statistical field)
    */
   static async createMeeting(data: CreateMeetingDTO): Promise<Meeting> {
     const meetingId = this.generateMeetingId();
@@ -45,7 +45,7 @@ export class MeetingService {
       meetingId,
       hostId: data.hostId,
       createdAt: now,
-      participantCount: 1, // HOST IS COUNTED HERE
+      participantCount: 0, // Start at 0, Backend 2 will update
       maxParticipants,
       isActive: true,
       updatedAt: now,
@@ -66,70 +66,22 @@ export class MeetingService {
     return await MeetingDAO.deactivate(meetingId);
   }
 
-  static async canJoinMeeting(meetingId: string) {
-    const meeting = await this.getMeetingByCode(meetingId);
-
-    if (!meeting)
-      return { canJoin: false, reason: "Meeting not found or expired" };
-
-    if (!meeting.isActive)
-      return { canJoin: false, reason: "Meeting is no longer active" };
-
-    if (meeting.participantCount >= meeting.maxParticipants) {
-      return {
-        canJoin: false,
-        reason: `Meeting is full (${meeting.maxParticipants}/${meeting.maxParticipants} participants)`,
-      };
-    }
-
-    return { canJoin: true, meeting };
-  }
-
-  static async joinMeeting(data: JoinMeetingDTO) {
-    const { meetingId } = data;
-
-    const { canJoin, reason, meeting } =
-      await this.canJoinMeeting(meetingId);
-
-    if (!canJoin || !meeting)
-      return { success: false, message: reason || "Cannot join meeting" };
-
-    const newCount = meeting.participantCount + 1;
-    await MeetingDAO.updateParticipantCount(meetingId, newCount);
-
-    const updatedMeeting = await this.getMeetingByCode(meetingId);
-
-    return {
-      success: true,
-      message: "Successfully joined meeting",
-      meeting: updatedMeeting || undefined,
-    };
-  }
-
-  static async leaveMeeting(meetingId: string): Promise<boolean> {
-    const meeting = await this.getMeetingByCode(meetingId);
-    if (!meeting) return false;
-
-    const newCount = Math.max(0, meeting.participantCount - 1);
-    return await MeetingDAO.updateParticipantCount(meetingId, newCount);
-  }
-
-  static async updateParticipants(
+  /**
+   * Update participant count (called by Backend 2 with real-time data)
+   * This is a statistical/historical field, not used for validation
+   */
+  static async updateParticipantCount(
     meetingId: string,
-    count: number
+    currentParticipants: number
   ): Promise<boolean> {
     const meeting = await this.getMeetingByCode(meetingId);
     if (!meeting) return false;
 
-    if (count > meeting.maxParticipants)
-      throw new Error(
-        `Participant count cannot exceed maximum of ${meeting.maxParticipants}`
-      );
-
-    if (count < 0)
+    if (currentParticipants < 0) {
       throw new Error("Participant count cannot be negative");
+    }
 
-    return await MeetingDAO.updateParticipantCount(meetingId, count);
+    // Update as historical/statistical data
+    return await MeetingDAO.updateParticipantCount(meetingId, currentParticipants);
   }
 }
-

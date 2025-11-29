@@ -5,7 +5,7 @@
 
 import { Request, Response } from "express";
 import { MeetingService } from "../services/MeetingService";
-import { CreateMeetingDTO, MeetingResponse, JoinMeetingDTO } from "../models/Meeting";
+import { CreateMeetingDTO, MeetingResponse, UpdateParticipantsDTO } from "../models/Meeting";
 
 export class MeetingController {
   /**
@@ -46,7 +46,7 @@ export class MeetingController {
 
   /**
    * GET /api/meetings/:meetingId
-   * Validate if a meeting exists and is active
+   * Get meeting info (NO validation, just data)
    */
   static async getMeeting(req: Request, res: Response): Promise<void> {
     try {
@@ -67,14 +67,13 @@ export class MeetingController {
         meeting: {
           meetingId: meeting.meetingId,
           hostId: meeting.hostId,
-          participantCount: meeting.participantCount,
+          participantCount: meeting.participantCount, // Historical/statistical
           maxParticipants: meeting.maxParticipants,
           createdAt: meeting.createdAt,
           isActive: meeting.isActive,
         },
         participantCount: meeting.participantCount,
         maxParticipants: meeting.maxParticipants,
-        canJoin: meeting.participantCount < meeting.maxParticipants,
       } as MeetingResponse);
     } catch (error: any) {
       console.error("Error getting meeting:", error);
@@ -86,89 +85,26 @@ export class MeetingController {
   }
 
   /**
-   * GET /api/meetings/:meetingId/can-join
-   * Check if a user can join a meeting
+   * PATCH /api/meetings/:meetingId/participants
+   * Update participant count (called by Backend 2 with real-time WebSocket count)
    */
-  static async canJoinMeeting(req: Request, res: Response): Promise<void> {
+  static async updateParticipants(req: Request, res: Response): Promise<void> {
     try {
       const { meetingId } = req.params;
+      const { currentParticipants }: UpdateParticipantsDTO = req.body;
 
-      const result = await MeetingService.canJoinMeeting(meetingId);
-
-      if (!result.canJoin) {
-        res.status(403).json({
-          success: false,
-          canJoin: false,
-          message: result.reason,
-        } as MeetingResponse);
-        return;
-      }
-
-      res.json({
-        success: true,
-        canJoin: true,
-        message: "You can join this meeting",
-        meeting: result.meeting,
-      } as MeetingResponse);
-    } catch (error: any) {
-      console.error("Error checking meeting join:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Internal server error",
-      });
-    }
-  }
-
-  /**
-   * POST /api/meetings/:meetingId/join
-   * Join a meeting (increment participant count)
-   */
-  static async joinMeeting(req: Request, res: Response): Promise<void> {
-    try {
-      const { meetingId } = req.params;
-      const { userId }: { userId: string } = req.body;
-
-      if (!userId) {
+      if (currentParticipants === undefined || currentParticipants === null) {
         res.status(400).json({
           success: false,
-          error: "userId is required",
+          error: "currentParticipants is required",
         } as MeetingResponse);
         return;
       }
 
-      const result = await MeetingService.joinMeeting({ meetingId, userId });
-
-      if (!result.success) {
-        res.status(403).json({
-          success: false,
-          message: result.message,
-        } as MeetingResponse);
-        return;
-      }
-
-      res.json({
-        success: true,
-        message: result.message,
-        meeting: result.meeting,
-      } as MeetingResponse);
-    } catch (error: any) {
-      console.error("Error joining meeting:", error);
-      res.status(500).json({
-        success: false,
-        error: error.message || "Internal server error",
-      });
-    }
-  }
-
-  /**
-   * POST /api/meetings/:meetingId/leave
-   * Leave a meeting (decrement participant count)
-   */
-  static async leaveMeeting(req: Request, res: Response): Promise<void> {
-    try {
-      const { meetingId } = req.params;
-
-      const success = await MeetingService.leaveMeeting(meetingId);
+      const success = await MeetingService.updateParticipantCount(
+        meetingId,
+        currentParticipants
+      );
 
       if (!success) {
         res.status(404).json({
@@ -180,11 +116,11 @@ export class MeetingController {
 
       res.json({
         success: true,
-        message: "Successfully left meeting",
+        message: "Participant count updated successfully",
       } as MeetingResponse);
     } catch (error: any) {
-      console.error("Error leaving meeting:", error);
-      res.status(500).json({
+      console.error("Error updating participants:", error);
+      res.status(400).json({
         success: false,
         error: error.message || "Internal server error",
       });
